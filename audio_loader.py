@@ -4,6 +4,7 @@ from urllib.parse import urlparse
 import torchaudio
 import folder_paths
 
+
 class AudioLoader:
     @classmethod
     def INPUT_TYPES(cls):
@@ -39,4 +40,4 @@ class AudioLoader:
             audio = {"waveform": waveform.unsqueeze(0), "sample_rate": sample_rate}
             return (audio,)
         except Exception as e:
-            raise Exception(f"Audio loading failed: {e}") 
+            raise Exception(f"Audio loading failed: {e}")

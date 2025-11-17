@@ -1,10 +1,11 @@
 import os
 from urllib.request import urlopen, Request
 from urllib.parse import urlparse
-from PIL import Image
+from PIL import Image, ImageOps
 import numpy as np
 import torch
 import folder_paths
+
 
 class ImageLoader:
     @classmethod
@@ -15,8 +16,8 @@ class ImageLoader:
             }
         }
 
-    RETURN_TYPES = ("IMAGE",)
-    RETURN_NAMES = ("image",)
+    RETURN_TYPES = ("IMAGE", "MASK", "PATH")
+    RETURN_NAMES = ("image", "mask", "path")
     FUNCTION = "load_from_url"
     CATEGORY = "utils"
 
@@ -37,9 +38,26 @@ class ImageLoader:
 
         # Load image as tensor in shape (1, H, W, C), normalized to [0, 1]
         try:
-            image = Image.open(image_path).convert("RGB")
+            img = Image.open(image_path)
+            img = ImageOps.exif_transpose(img)
+
+            if img.mode == "I":
+                img = img.point(lambda i: i * (1 / 255))
+
+            # Extract mask from alpha channel before converting to RGB
+            if "A" in img.getbands():
+                mask = np.array(img.getchannel("A")).astype(np.float32) / 255.0
+                mask = 1.0 - torch.from_numpy(mask)
+            else:
+                h, w = img.size[1], img.size[0]
+                mask = torch.zeros((h, w), dtype=torch.float32, device="cpu")
+
+            image = img.convert("RGB")
             image_np = np.array(image, dtype=np.float32) / 255.0
             image_tensor = torch.from_numpy(image_np).unsqueeze(0)
-            return (image_tensor,)
+
+            mask = mask.unsqueeze(0)
+
+            return (image_tensor, mask, image_path)
         except Exception as e:
-            raise Exception(f"Image load failed: {e}") 
+            raise Exception(f"Image load failed: {e}")

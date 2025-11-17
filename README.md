@@ -9,6 +9,8 @@ ComfyUI plugin for downloading and loading media files from URLs.
 - Download images from URLs and convert them to ComfyUI's IMAGE format
 - Supports common image formats (JPG, PNG, GIF, etc.)
 - Automatic RGB conversion and normalization
+- Alpha channel mask extraction support
+- EXIF orientation correction
 - Direct preview in ComfyUI interface
 
 ### URL Audio Loader
@@ -50,7 +52,10 @@ git clone https://github.com/subnet99/ComfyUI-URLLoader.git
 ### ImageLoader
 
 - **Input**: `url` (STRING) - The URL of the image to download
-- **Output**: `image` (IMAGE) - The downloaded image as a tensor
+- **Output**: 
+  - `image` (IMAGE) - The downloaded image as a tensor
+  - `mask` (MASK) - The alpha channel mask if available, otherwise a zero mask
+  - `path` (PATH) - The local file path of the downloaded image
 - **Category**: utils
 
 ### AudioLoader
